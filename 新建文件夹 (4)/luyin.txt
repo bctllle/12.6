@@ -1,0 +1,109 @@
+this.setSize(300,200);
+		this.setTitle("录音机");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//设置窗口居中
+		this.setLocationRelativeTo(null);
+		//将窗口的边框去掉
+		this.setUndecorated(true);
+		this.setVisible(true);
+		//设置窗口上的图标
+		
+		Image img = this.getToolkit().getImage(getClass().getResource("/image/Recorder.jpg"));
+		this.setIconImage(img);
+		//设置窗口在最前端显示
+		this.setAlwaysOnTop(true);
+	}
+	public void mouseClicked(MouseEvent e) {
+		
+	}
+	public void mousePressed(MouseEvent e) {
+		//当开始录音按钮被按下时就开始录音
+		if(e.getSource().equals(captureBtn))
+		{
+	        //改变按钮上面的字的内容
+	        captureBtn.setText("松开 结束");
+			
+	        //调用录音的方法
+	        capture();
+	        
+	        //记录开始录音的时间
+	        startPlay = System.currentTimeMillis();
+		}
+		
+	}
+ 
+	public void mouseReleased(MouseEvent e) {
+		//当松开录音按钮时停止录音并保存录音的文件
+		if(e.getSource().equals(captureBtn))
+		{
+			//调用停止录音的方法
+			stop();
+			//当松开按钮后对显示波形的面板进行清空
+			jp2.repaint();
+			//改变按钮上面的字的内容
+			captureBtn.setText("按住 说话");
+			//调用保存录音的方法
+			save();
+			//将其放到指定的路径下
+			//定义最终要存放的文件路径
+			String destPath = "";
+			copyFile("D:/"+tarFile.getName(), destPath);
+			
+			System.exit(0);
+		}
+	}
+	
+	public void mouseEntered(MouseEvent e) {
+		
+		
+	}
+	public void mouseExited(MouseEvent e) {
+		
+		
+	}
+	//开始录音
+	public void capture()
+	{
+		try {
+		
+			af = getAudioFormat();
+			DataLine.Info info = new DataLine.Info(TargetDataLine.class,af);
+			td = (TargetDataLine)(AudioSystem.getLine(info));
+			
+			//打开具有指定格式的行，这样可使行获得所有所需的系统资源并变得可操作。
+			td.open(af);
+			//允许某一数据行执行数据 I/O
+			td.start();
+			
+			//启动显示波形的进程
+			RecordWave aw = new RecordWave();
+			Thread t2 = new Thread(aw);
+			t2.start();
+			//把显示波形的进程标志设为true
+			flag = true;
+			
+			Record record = new Record();
+			Thread t1 = new Thread(record);
+			t1.start();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return;
+		}
+	}
+	//停止录音
+	public void stop()
+	{
+		stopflag = true;
+		//将画波形的进程终止
+		flag = false;
+	}
+	//保存录音
+	public void save()
+	{
+		af = getAudioFormat();
+        byte audioData[] = baos.toByteArray();
+        bais = new ByteArrayInputStream(audioData);
+        ais = new AudioInputStream(bais,af, audioData.length / af.getFrameSize());
+        //定义最终保存的文件名
+        File file = null;
+        //写入文件
